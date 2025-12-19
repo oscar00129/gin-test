@@ -7,6 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Usuario struct {
+	Nombre string `json:"nombre"`
+	Email  string `json:"email"`
+}
+
+var usuarios []Usuario
+
 func SetupRoutes(r *gin.Engine) {
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -34,6 +41,38 @@ func SetupRoutes(r *gin.Engine) {
 	})
 
 	r.GET("/func", fromFunction)
+
+	r.GET("/usuarios", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"data": usuarios,
+		})
+	})
+
+	r.POST("/usuarios", func(c *gin.Context) {
+		var nuevoUsuario Usuario
+
+		if err := c.BindJSON(&nuevoUsuario); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Error al decodificar el JSON",
+			})
+			return
+		}
+
+		if nuevoUsuario.Nombre == "" || nuevoUsuario.Email == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Nombre y correo electronico son campos requeridos",
+			})
+			return
+		}
+
+		usuarios = append(usuarios, nuevoUsuario)
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Usuario registrado",
+			"data":    nuevoUsuario,
+		})
+	})
+
 }
 
 func fromFunction(c *gin.Context) {
